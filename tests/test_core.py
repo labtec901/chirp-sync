@@ -99,10 +99,10 @@ class FecTest(unittest.TestCase):
 
 class ModemTest(unittest.TestCase):
 
-    def test_default_profile_is_fast(self):
+    def test_default_profile_is_balanced(self):
         chirp = generate(sample_rate=48000, lead_in=0.0, lead_out=0.0)
-        self.assertEqual(css.DEFAULT_PROFILE, "fast")
-        self.assertEqual(chirp.layout["profile"], "fast")
+        self.assertEqual(css.DEFAULT_PROFILE, "balanced")
+        self.assertEqual(chirp.layout["profile"], "balanced")
 
     def test_gray_symbol_mapping_round_trip(self):
         rng = np.random.default_rng(3)

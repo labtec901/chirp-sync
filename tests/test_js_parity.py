@@ -83,14 +83,14 @@ def run_node(spec: dict) -> dict:
 @unittest.skipUnless(node_available(), "node or webapp/chirpsync.js not available")
 class JsParityTest(unittest.TestCase):
 
-    def test_javascript_default_profile_is_fast(self):
+    def test_javascript_default_profile_is_balanced(self):
         with tempfile.TemporaryDirectory() as td:
             out = str(Path(td) / "js.f32")
             js = run_node({
                 "mode": "render", "sampleRate": 48000,
                 "leadIn": 0.0, "leadOut": 0.0, "out": out,
             })
-        self.assertEqual(js["layout"]["duration"], 1.088)
+        self.assertEqual(js["layout"]["duration"], 1.984)
 
     def test_intermediate_stages_match(self):
         rng = np.random.default_rng(4)

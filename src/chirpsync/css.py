@@ -78,7 +78,7 @@ PROFILES = {
     "balanced": Profile("balanced", sf=8),
     "robust": Profile("robust", sf=9),
 }
-DEFAULT_PROFILE = "fast"
+DEFAULT_PROFILE = "balanced"
 
 
 def get_profile(name: str) -> Profile:

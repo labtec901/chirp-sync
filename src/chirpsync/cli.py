@@ -236,7 +236,7 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_argument("-o", "--output", help="output WAV (default chirp_<TAKE>.wav)")
     g.add_argument("-p", "--profile", default=css.DEFAULT_PROFILE,
                    choices=sorted(css.PROFILES),
-                   help="fast = shortest, robust = for big reverberant rooms")
+                   help="balanced = default, fast = shortest, robust = for big reverberant rooms")
     g.add_argument("--take", help="reuse a specific take ID instead of a new one")
     g.add_argument("--rate", type=int, default=48000)
     g.add_argument("--level", type=float, default=-3.0, help="peak level in dBFS")
