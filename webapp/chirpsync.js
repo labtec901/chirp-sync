@@ -265,7 +265,7 @@
 
   function generate(opts) {
     opts = opts || {};
-    var profile = PROFILES[opts.profile || 'fast'];
+    var profile = PROFILES[opts.profile || 'balanced'];
     if (!profile) throw new Error('unknown profile ' + opts.profile);
     var sampleRate = opts.sampleRate || 48000;
     var payload = buildPayload(opts);
@@ -310,7 +310,7 @@
 
   function estimateDuration(opts) {
     opts = opts || {};
-    var profile = PROFILES[opts.profile || 'fast'];
+    var profile = PROFILES[opts.profile || 'balanced'];
     if (!profile) throw new Error('unknown profile ' + opts.profile);
     var count = profile.preamble + profile.sfd + blockSymbols(PAYLOAD_BYTES, profile.sf);
     return { duration: count * symbolTime(profile, profile.sf) };

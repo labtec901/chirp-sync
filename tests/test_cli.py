@@ -16,10 +16,10 @@ from chirpsync.cli import build_parser, main  # noqa: E402
 
 class CliTest(unittest.TestCase):
 
-    def test_gen_defaults_to_fast(self):
+    def test_gen_defaults_to_balanced(self):
         args = build_parser().parse_args(["gen"])
-        self.assertEqual(css.DEFAULT_PROFILE, "fast")
-        self.assertEqual(args.profile, "fast")
+        self.assertEqual(css.DEFAULT_PROFILE, "balanced")
+        self.assertEqual(args.profile, "balanced")
 
     def test_prepend_id_dry_run_then_apply(self):
         take = "X4THAPJ9"
@@ -60,6 +60,11 @@ class CliTest(unittest.TestCase):
         page = (ROOT / "webapp" / "index.html").read_text(encoding="utf-8")
         self.assertIn("navigator.audioSession.type = 'playback'", page)
         self.assertIn("turn off Silent Mode and raise media volume", page)
+
+    def test_website_defaults_to_balanced(self):
+        page = (ROOT / "webapp" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<option value="balanced" selected>Balanced - default</option>', page)
+        self.assertNotIn('<option value="fast" selected>', page)
 
 
 if __name__ == "__main__":

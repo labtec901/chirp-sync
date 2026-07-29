@@ -98,7 +98,7 @@ take.
 
 ### `chirp-sync gen`
 
-Generate a WAV with a fresh random take ID. The fast profile is the default.
+Generate a WAV with a fresh random take ID. The balanced profile is the default.
 
 ```bash
 chirp-sync gen
@@ -149,8 +149,8 @@ Run `chirp-sync COMMAND --help` for every option.
 
 | Profile | SF | Symbol | Data symbols | Complete burst | Intended use |
 |---|---:|---:|---:|---:|---|
-| `fast` (default) | 7 | 32 ms | 24 | 1.088 s | Normal close-range use |
-| `balanced` | 8 | 64 ms | 21 | 1.984 s | More range or reverberation |
+| `fast` | 7 | 32 ms | 24 | 1.088 s | Normal close-range use |
+| `balanced` (default) | 8 | 64 ms | 21 | 1.984 s | More range or reverberation |
 | `robust` | 9 | 128 ms | 19 | 3.712 s | Large, noisy, or echoing rooms |
 
 The website adds 0.15 seconds of silence at each end. The CLI defaults to 0.25
@@ -219,7 +219,7 @@ storage.
 ```python
 from chirpsync import detect, generate
 
-chirp = generate()  # fast profile by default
+chirp = generate()  # balanced profile by default
 detections = detect(chirp.audio, chirp.sample_rate)
 assert detections[0].take == chirp.payload.take
 ```
