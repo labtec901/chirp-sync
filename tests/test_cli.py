@@ -56,6 +56,11 @@ class CliTest(unittest.TestCase):
                 self.assertNotIn("\N{EM DASH}", text)
                 self.assertNotIn("&mdash;", text.lower())
 
+    def test_website_requests_mobile_playback_audio_session(self):
+        page = (ROOT / "webapp" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("navigator.audioSession.type = 'playback'", page)
+        self.assertIn("turn off Silent Mode and raise media volume", page)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

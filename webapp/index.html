@@ -61,6 +61,8 @@
   #play.playing { background: var(--warn); }
   .status { text-align: center; margin-top: 10px; font-size: 13px; color: var(--muted);
             min-height: 20px; }
+  .playback-hint { text-align: center; margin: 2px 0 0; font-size: 12px;
+                   color: var(--muted); }
   .meterwrap { height: 5px; background: var(--panel-2); border-radius: 3px;
                overflow: hidden; margin-top: 12px; }
   .meter { height: 100%; width: 0%; background: var(--accent); transition: width .06s linear; }
@@ -119,6 +121,7 @@
   <button id="play">Play chirp</button>
   <div class="meterwrap"><div class="meter" id="meter"></div></div>
   <div class="status" id="status">&nbsp;</div>
+  <p class="playback-hint">If a phone is silent, turn off Silent Mode and raise media volume.</p>
 </div>
 
 <div class="panel">
@@ -200,8 +203,18 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
+  function requestPlaybackAudioSession() {
+    // Recent iOS versions can route Web Audio through the media playback
+    // session so the hardware Silent Mode switch does not mute the chirp.
+    if (!navigator.audioSession) return;
+    try {
+      navigator.audioSession.type = 'playback';
+    } catch (e) { /* Keep the manual Silent Mode hint as the fallback. */ }
+  }
+
   function play() {
     if (playing) return;
+    requestPlaybackAudioSession();
     // The AudioContext must be created inside the click handler or mobile
     // browsers require this timing before they allow audio playback.
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
