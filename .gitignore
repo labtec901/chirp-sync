@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+artifacts/
+chirp_*.wav
+chirp-sync.csv
+chirp-sync.json
+chirp-sync.fcpxml
+edl/

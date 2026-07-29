@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chirp-sync"
+dynamic = ["version"]
+description = "Acoustic take IDs and precise synchronization for multi-camera recordings"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "labtec901" }]
+keywords = ["audio", "chirp", "multicam", "slate", "sync", "timecode", "video"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Sound/Audio :: Analysis",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "numpy>=1.23",
+  "scipy>=1.9",
+]
+
+[project.optional-dependencies]
+mic = ["sounddevice>=0.4"]
+test = ["pytest>=8", "ruff>=0.12", "soundfile>=0.12"]
+dev = ["build>=1.2", "pytest>=8", "ruff>=0.12", "soundfile>=0.12", "twine>=6"]
+
+[project.scripts]
+chirp-sync = "chirpsync.cli:main"
+
+[project.urls]
+Homepage = "https://labtec901.github.io/chirp-sync/"
+Documentation = "https://github.com/labtec901/chirp-sync#readme"
+Repository = "https://github.com/labtec901/chirp-sync"
+Issues = "https://github.com/labtec901/chirp-sync/issues"
+Changelog = "https://github.com/labtec901/chirp-sync/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "chirpsync._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+chirpsync = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+ignore = ["E402"]

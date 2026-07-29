@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11131a">
+<meta name="description" content="Generate acoustic take-ID chirps for multi-camera sync.">
+<title>chirp-sync - take slate</title>
+<!--
+  This page is one HTML file plus one script. The encoder lives in
+  chirpsync.js and is bit-exact with the Python parser; this page provides the
+  interface around it.
+-->
+<style>
+  :root {
+    --bg: #11131a;
+    --panel: #191d28;
+    --panel-2: #212636;
+    --line: #2f3648;
+    --text: #eef1f7;
+    --muted: #99a2b8;
+    --accent: #ffb454;
+    --accent-dim: #6b4a1c;
+    --ok: #58c98a;
+    --warn: #f2884b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    max-width: 720px; margin: 0 auto; -webkit-text-size-adjust: 100%;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: 12px; text-transform: uppercase;
+          letter-spacing: .8px; color: var(--muted); margin-bottom: 6px; }
+  select {
+    width: 100%; padding: 11px 12px; font-size: 16px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 9px; font-family: inherit;
+  }
+  select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; min-width: 0; }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  #play {
+    width: 100%; padding: 26px; font-size: 21px; font-weight: 650;
+    color: #241703; background: var(--accent); border: 0; border-radius: 16px;
+    cursor: pointer; font-family: inherit; letter-spacing: .3px;
+    transition: transform .06s ease, background .15s ease;
+  }
+  #play:active { transform: scale(.985); }
+  #play[disabled] { background: var(--accent-dim); color: var(--muted); cursor: default; }
+  #play.playing { background: var(--warn); }
+  .status { text-align: center; margin-top: 10px; font-size: 13px; color: var(--muted);
+            min-height: 20px; }
+  .meterwrap { height: 5px; background: var(--panel-2); border-radius: 3px;
+               overflow: hidden; margin-top: 12px; }
+  .meter { height: 100%; width: 0%; background: var(--accent); transition: width .06s linear; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px;
+          table-layout: fixed; }
+  col.c-take { width: 5.5em; }
+  col.c-time { width: 5.5em; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase;
+       letter-spacing: .7px; color: var(--muted); font-weight: 600;
+       padding: 0 8px 8px 0; }
+  td { padding: 7px 8px 7px 0; border-top: 1px solid var(--line);
+       vertical-align: top; }
+  td.take { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--accent); white-space: nowrap; }
+  .empty { color: var(--muted); font-size: 13px; }
+  .btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 14px; font-size: 14px; border-radius: 9px; cursor: pointer;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    font-family: inherit;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn[disabled] { opacity: .45; cursor: default; border-color: var(--line); }
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 18px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>chirp-sync</h1>
+<div class="sub">Acoustic slate. Roll every camera, then play the chirp.</div>
+
+<div class="panel">
+  <div class="row field">
+    <div>
+      <label for="profile">Profile</label>
+      <select id="profile">
+        <option value="fast" selected>Fast - default</option>
+        <option value="balanced">Balanced - more range</option>
+        <option value="robust">Robust - big or noisy room</option>
+      </select>
+    </div>
+    <div>
+      <label for="repeats">Repeats</label>
+      <select id="repeats">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <button id="play">Play chirp</button>
+  <div class="meterwrap"><div class="meter" id="meter"></div></div>
+  <div class="status" id="status">&nbsp;</div>
+</div>
+
+<div class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <label style="margin:0">Takes this session</label>
+    <span class="empty" id="count"></span>
+  </div>
+  <div id="logwrap" style="margin-top:10px">
+    <div class="empty" id="logempty">Played takes appear here.</div>
+    <table id="log" hidden>
+      <colgroup><col class="c-take"><col class="c-time"></colgroup>
+      <thead><tr><th>Take</th><th>Played</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="btns">
+    <button class="btn" id="dlwav" disabled>Download last WAV</button>
+    <button class="btn" id="clear" disabled>Clear</button>
+  </div>
+</div>
+
+<footer>
+  Runs locally in your browser.
+  <a href="https://github.com/labtec901/chirp-sync">Source and CLI</a>
+</footer>
+
+<script src="chirpsync.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var takes = [];
+  var lastChirp = null;
+  var ctx = null;
+  var playing = false;
+
+  function fmtTime(ms) {
+    var d = new Date(ms);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function updateEstimate() {
+    var est = ChirpSync.estimateDuration({
+      profile: $('profile').value
+    });
+    var reps = parseInt($('repeats').value, 10);
+    var total = est.duration * reps + 0.25 * (reps - 1);
+    $('status').textContent = playing ? $('status').textContent :
+      'Take-ID chirp is ' + total.toFixed(1) + ' s';
+  }
+
+  function renderLog() {
+    var body = $('log').querySelector('tbody');
+    body.innerHTML = '';
+    takes.slice().reverse().forEach(function (t) {
+      var tr = document.createElement('tr');
+      var a = document.createElement('td'); a.className = 'take'; a.textContent = t.take_id;
+      var b = document.createElement('td');
+      b.textContent = fmtTime(t.played_at_ms);
+      tr.appendChild(a); tr.appendChild(b);
+      body.appendChild(tr);
+    });
+    var any = takes.length > 0;
+    $('log').hidden = !any;
+    $('logempty').hidden = any;
+    $('count').textContent = any ? takes.length + ' logged' : '';
+    $('clear').disabled = !any;
+    $('dlwav').disabled = !lastChirp;
+    try {
+      localStorage.setItem('chirpsync.take_ids', JSON.stringify(takes));
+    } catch (e) { /* private browsing; the session still works */ }
+  }
+
+  function download(name, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  function play() {
+    if (playing) return;
+    // The AudioContext must be created inside the click handler or mobile
+    // browsers require this timing before they allow audio playback.
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    var out = ChirpSync.generate({
+      profile: $('profile').value,
+      repeats: parseInt($('repeats').value, 10),
+      sampleRate: ctx.sampleRate,
+      leadIn: 0.15,
+      leadOut: 0.15,
+      levelDbfs: -3
+    });
+
+    var buf = ctx.createBuffer(1, out.audio.length, out.sampleRate);
+    buf.getChannelData(0).set(out.audio);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+
+    playing = true;
+    $('play').classList.add('playing');
+    $('play').textContent = 'Playing…';
+    $('status').textContent = 'Take ' + out.take + ' - keep rolling';
+
+    var started = ctx.currentTime;
+    var total = out.duration;
+    var timer = setInterval(function () {
+      var pct = Math.min(100, ((ctx.currentTime - started) / total) * 100);
+      $('meter').style.width = pct + '%';
+    }, 40);
+
+    src.onended = function () {
+      clearInterval(timer);
+      playing = false;
+      $('meter').style.width = '0%';
+      $('play').classList.remove('playing');
+      $('play').textContent = 'Play chirp';
+      updateEstimate();
+    };
+    src.start();
+
+    lastChirp = out;
+    takes.push({
+      take_id: out.take,
+      played_at_ms: Date.now()
+    });
+    renderLog();
+  }
+
+  $('play').addEventListener('click', play);
+  ['profile', 'repeats'].forEach(function (id) {
+    $(id).addEventListener('input', updateEstimate);
+    $(id).addEventListener('change', updateEstimate);
+  });
+
+  $('dlwav').addEventListener('click', function () {
+    if (!lastChirp) return;
+    download('chirp_' + lastChirp.take + '.wav',
+             new Blob([ChirpSync.toWavBlob(lastChirp.audio, lastChirp.sampleRate)],
+                      { type: 'audio/wav' }));
+  });
+
+  $('clear').addEventListener('click', function () {
+    if (takes.length && !confirm('Discard ' + takes.length + ' logged take(s)?')) return;
+    takes = [];
+    lastChirp = null;
+    renderLog();
+  });
+
+  // Survive an accidental reload mid-shoot.
+  try {
+    var saved = localStorage.getItem('chirpsync.take_ids');
+    if (saved) takes = JSON.parse(saved) || [];
+  } catch (e) { takes = []; }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); play(); }
+  });
+
+  renderLog();
+  updateEstimate();
+})();
+</script>
+</body>
+</html>
